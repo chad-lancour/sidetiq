@@ -6,6 +6,8 @@ module Sidetiq
     def dispatch(worker, tick)
       schedule = worker.schedule
 
+      return if schedule.disabled?(worker)
+
       return unless schedule.schedule_next?(tick)
 
       Lock::Redis.new(worker).synchronize do |redis|

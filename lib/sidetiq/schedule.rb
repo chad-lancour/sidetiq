@@ -27,6 +27,15 @@ module Sidetiq
       end
     end
 
+    # Public: Checks if a job is disabled
+    #
+    # Returns true if a job is disabled, otherwise false.
+    def disabled?(worker)
+      Sidekiq.redis do |redis|
+        return redis.get("sidetiq:#{worker.name}:disabled") == 'true' ? true : false
+      end
+    end
+
     # Public: Checks if a job is due to be scheduled.
     #
     # Returns true if a job is due, otherwise false.

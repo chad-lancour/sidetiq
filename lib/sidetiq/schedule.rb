@@ -32,7 +32,7 @@ module Sidetiq
     # Returns true if a job is disabled, otherwise false.
     def disabled?(worker)
       Sidekiq.redis do |redis|
-        return redis.get("sidetiq:#{worker.name}:disabled") == 'true' ? true : false
+        return redis.get("sidetiq:#{Sidetiq.namespace(worker)}:disabled") == 'true' ? true : false
       end
     end
 

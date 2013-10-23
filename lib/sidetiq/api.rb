@@ -89,6 +89,26 @@ module Sidetiq
       filter_set(Sidekiq::RetrySet.new, worker, &block)
     end
 
+    def disable(worker=nil)
+      workers = worker.nil? ? Sidetiq.workers : [worker]
+      keys=workers.map { |w| "sidetiq:#{w.name}:disabled" }
+      Sidekiq.redis do |redis|
+        keys.each do |key|
+          redis.set(key, 'true')
+        end
+      end
+    end
+
+    def enable(worker=nil)
+      workers = worker.nil? ? Sidetiq.workers : [worker]
+      keys=workers.map { |w| "sidetiq:#{w.name}:disabled" }
+      Sidekiq.redis do |redis|
+        keys.each do |key|
+          redis.del(key)
+        end
+      end
+    end
+
     private
 
     def filter_set(set, worker, &block)

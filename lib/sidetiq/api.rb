@@ -91,7 +91,7 @@ module Sidetiq
 
     def disable(worker=nil)
       workers = worker.nil? ? Sidetiq.workers : [worker]
-      keys=workers.map { |w| "sidetiq:#{w.name}:disabled" }
+      keys=workers.map { |w| "sidetiq:#{Sidetiq.namespace(w)}:disabled" }
       Sidekiq.redis do |redis|
         keys.each do |key|
           redis.set(key, 'true')
@@ -101,12 +101,31 @@ module Sidetiq
 
     def enable(worker=nil)
       workers = worker.nil? ? Sidetiq.workers : [worker]
-      keys=workers.map { |w| "sidetiq:#{w.name}:disabled" }
+      keys=workers.map { |w| "sidetiq:#{Sidetiq.namespace(w)}:disabled" }
       Sidekiq.redis do |redis|
         keys.each do |key|
           redis.del(key)
         end
       end
+    end
+
+    def namespace(object)
+      ns = case
+             when object.is_a?(Class)
+               object.name
+             when object.is_a?(String)
+               object
+             when object.is_a?(Symbol)
+               object
+             else
+               object.class.name
+           end
+      ns.gsub!('::', ':')
+      ns.gsub!(/([A-Z\d]+)([A-Z][a-z])/, '\1_\2')
+      ns.gsub!(/([a-z\d])([A-Z])/, '\1_\2')
+      ns.tr!("-", "_")
+      ns.downcase!
+      ns
     end
 
     private

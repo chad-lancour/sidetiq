@@ -54,7 +54,20 @@ module Sidetiq
           worker.name == name
         end
 
-        worker.perform_async
+        key = "sidetiq:#{Sidetiq.namespace(worker)}"
+        time_f = Time.now.to_f
+        next_run = Sidekiq.redis do |redis|
+          (redis.get("#{key}:next") || -1).to_f
+        end
+
+        case worker.instance_method(:perform).parameters.size
+          when 0
+            worker.perform_async
+          when 1
+            worker.perform_async(next_run)
+          else
+            worker.perform_async(next_run, time_f)
+        end
 
         redirect "#{root_path}sidetiq"
       end
